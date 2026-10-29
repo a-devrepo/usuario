@@ -5,7 +5,10 @@ import com.nca.usuario.business.converter.TelefoneConverter;
 import com.nca.usuario.business.converter.UsuarioConverter;
 import com.nca.usuario.business.dto.UsuarioDTO;
 import com.nca.usuario.infrastructure.entities.Usuario;
+import com.nca.usuario.infrastructure.exceptions.ConflictException;
+import com.nca.usuario.infrastructure.exceptions.ResourceNotFoundException;
 import com.nca.usuario.infrastructure.repositories.UsuarioRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,20 +18,40 @@ public class UsuarioService {
     private final UsuarioConverter usuarioConverter;
     private final EnderecoConverter enderecoConverter;
     private final TelefoneConverter telefoneConverter;
+    private final PasswordEncoder passwordEncoder;
 
     public UsuarioService(UsuarioRepository usuarioRepository, UsuarioConverter usuarioConverter,
-                          EnderecoConverter enderecoConverter, TelefoneConverter telefoneConverter) {
+                          EnderecoConverter enderecoConverter, TelefoneConverter telefoneConverter,
+                          PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
         this.usuarioConverter = usuarioConverter;
         this.enderecoConverter = enderecoConverter;
         this.telefoneConverter = telefoneConverter;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public UsuarioDTO salvar(UsuarioDTO usuarioDTO) {
 
+        validarUsuario(usuarioDTO);
+        usuarioDTO.setSenha(passwordEncoder.encode(usuarioDTO.getSenha()));
         var usuario = paraUsuario(usuarioDTO);
         usuario = usuarioRepository.save(usuario);
         return paraUsuarioDTO(usuario);
+    }
+
+    private void validarUsuario(UsuarioDTO usuarioDTO) {
+        if (emailJaCadastrado(usuarioDTO.getEmail())) {
+            throw new ConflictException("Email ja cadastrado: " + usuarioDTO.getEmail());
+        }
+    }
+
+    private boolean emailJaCadastrado(String email) {
+        return usuarioRepository.existsByEmail(email);
+    }
+
+    public Usuario buscarPorEmail(String email) {
+        return usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario nao encontrado com email: " + email));
     }
 
 
