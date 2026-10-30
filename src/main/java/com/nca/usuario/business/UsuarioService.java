@@ -39,6 +39,10 @@ public class UsuarioService {
         return paraUsuarioDTO(usuario);
     }
 
+    public void deletarPorEmail(String email) {
+        usuarioRepository.deleteByEmail(email);
+    }
+
     private void validarUsuario(UsuarioDTO usuarioDTO) {
         if (emailJaCadastrado(usuarioDTO.getEmail())) {
             throw new ConflictException("Email ja cadastrado: " + usuarioDTO.getEmail());
