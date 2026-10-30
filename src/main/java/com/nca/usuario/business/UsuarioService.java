@@ -8,6 +8,7 @@ import com.nca.usuario.infrastructure.entities.Usuario;
 import com.nca.usuario.infrastructure.exceptions.ConflictException;
 import com.nca.usuario.infrastructure.exceptions.ResourceNotFoundException;
 import com.nca.usuario.infrastructure.repositories.UsuarioRepository;
+import com.nca.usuario.infrastructure.security.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -19,15 +20,18 @@ public class UsuarioService {
     private final EnderecoConverter enderecoConverter;
     private final TelefoneConverter telefoneConverter;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
     public UsuarioService(UsuarioRepository usuarioRepository, UsuarioConverter usuarioConverter,
                           EnderecoConverter enderecoConverter, TelefoneConverter telefoneConverter,
-                          PasswordEncoder passwordEncoder) {
+                          PasswordEncoder passwordEncoder,
+                          JwtUtil jwtUtil) {
         this.usuarioRepository = usuarioRepository;
         this.usuarioConverter = usuarioConverter;
         this.enderecoConverter = enderecoConverter;
         this.telefoneConverter = telefoneConverter;
         this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
     }
 
     public UsuarioDTO salvar(UsuarioDTO usuarioDTO) {
@@ -41,6 +45,16 @@ public class UsuarioService {
 
     public void deletarPorEmail(String email) {
         usuarioRepository.deleteByEmail(email);
+    }
+
+    public UsuarioDTO atualizar(String token, UsuarioDTO usuarioDTO) {
+        var email = jwtUtil.extractUsername(token.substring(7));
+        var usuario = this.buscarPorEmail(email);
+        usuarioDTO.setSenha(usuarioDTO.getSenha() != null ?
+                passwordEncoder.encode(usuarioDTO.getSenha()) : usuario.getSenha());
+        var usuarioAtualizado = usuarioConverter.updateUsuario(usuarioDTO, usuario);
+        usuarioAtualizado = usuarioRepository.save(usuarioAtualizado);
+        return paraUsuarioDTO(usuarioAtualizado);
     }
 
     private void validarUsuario(UsuarioDTO usuarioDTO) {
