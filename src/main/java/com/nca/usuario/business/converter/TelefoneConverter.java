@@ -10,7 +10,12 @@ import java.util.List;
 public class TelefoneConverter {
 
     public Telefone paraTelefone(TelefoneDTO telefoneDTO) {
+        return this.paraTelefone(telefoneDTO, null);
+    }
+
+    public Telefone paraTelefone(TelefoneDTO telefoneDTO, Long idUsuario) {
         return Telefone.builder()
+                .usuarioId(idUsuario)
                 .numero(telefoneDTO.getNumero())
                 .ddd(telefoneDTO.getDdd())
                 .build();

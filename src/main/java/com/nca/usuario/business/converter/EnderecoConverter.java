@@ -10,7 +10,12 @@ import java.util.List;
 public class EnderecoConverter {
 
     public Endereco paraEndereco(EnderecoDTO enderecoDTO) {
+        return this.paraEndereco(enderecoDTO, null);
+    }
+
+    public Endereco paraEndereco(EnderecoDTO enderecoDTO, Long idUsuario) {
         return Endereco.builder()
+                .usuarioId(idUsuario)
                 .rua(enderecoDTO.getRua())
                 .numero(enderecoDTO.getNumero())
                 .complemento(enderecoDTO.getComplemento())
