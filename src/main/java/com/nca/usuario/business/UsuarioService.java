@@ -89,6 +89,24 @@ public class UsuarioService {
         return paraDTO(usuario);
     }
 
+    public EnderecoDTO cadastrarEndereco(EnderecoDTO enderecoDTO, String token) {
+        var email = jwtUtil.extractUsername(token.substring(7));
+        var usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário nao encontrado com email: " + email));
+        var endereco = enderecoConverter.paraEndereco(enderecoDTO, usuario.getId());
+        endereco = enderecoRepository.save(endereco);
+        return enderecoConverter.paraEnderecoDTO(endereco);
+    }
+
+    public TelefoneDTO cadastrarTelefone(TelefoneDTO telefoneDTO, String token) {
+        var email = jwtUtil.extractUsername(token.substring(7));
+        var usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário nao encontrado com email: " + email));
+        var telefone = telefoneConverter.paraTelefone(telefoneDTO, usuario.getId());
+        telefone = telefoneRepository.save(telefone);
+        return telefoneConverter.paraTelefoneDTO(telefone);
+    }
+
     private void validarUsuario(UsuarioDTO usuarioDTO) {
         if (emailJaCadastrado(usuarioDTO.getEmail())) {
             throw new ConflictException("Email ja cadastrado: " + usuarioDTO.getEmail());
